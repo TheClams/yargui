@@ -2,7 +2,7 @@
 
 YarGui is a graphical user interface to display complete register structure defined in RIFs file.
 
-It is based on the yarig library (https://github.com/TheClams/).
+It is based on the [yarig library](https://github.com/TheClams/yarig).
 
 ## Installation
 If you have the rust toolchain installed, just run `cargo install yargui`
