@@ -1,6 +1,6 @@
 [package]
 name = "yargui"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
 license = "MIT"
 description = "A viewer for RIF files (register interface)"
@@ -16,5 +16,5 @@ eframe = "0.31"
 egui = "0.31"
 egui-file-dialog = "0.10"
 egui_extras = "0.31"
-yarig = "0.13"
+yarig = "0.15"
 # yarig = {path="../rifgen"}
