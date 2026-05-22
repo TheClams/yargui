@@ -15,7 +15,7 @@ use select::{SelectedItem, Selection};
 use widget::TreeNodeBuilder;
 use yarig::{
     comp::comp_inst::{Comp, RifExt, RifFieldInst, RifInst, RifPageInst, RifRegInst, RifmuxInst},
-    parser::{parser_expr::ParamValues, remove_rif, RifGenSrc, RsvdKeywordSel},
+    parser::{ParserCfg, RifGenSrc, RsvdKeywordSel, parser_expr::ParamValues, remove_rif},
     rifgen::SuffixInfo
 };
 
@@ -208,7 +208,7 @@ impl eframe::App for RifViewer {
                             if let (Some(enum_type),Some(CompRef::Rif(rif))) = (field.enum_kind.name(), rif_ref) {
                                 enum_def = rif.enum_defs.iter().find(|e| e.name==*enum_type);
                                 if let Some(d) = enum_def {
-                                    enum_rst = d.values.iter().find(|e| e.value==field.reset.to_u128(field.width) as u8).map(|e| e.name.clone());
+                                    enum_rst = d.values.iter().find(|e| e.value==field.reset.to_u128(field.width() as u8) as u8).map(|e| e.name.clone());
                                 }
                             }
                             let rst_str = enum_rst.unwrap_or(get_field_rst_str(field));
@@ -236,7 +236,9 @@ impl RifViewer {
 
     fn open_file(&mut self) {
         self.selected.path.clear();
-        match RifGenSrc::from_file(&self.file_path, &[], RsvdKeywordSel { sv: false, vhdl: false, error: false}) {
+        let rsvd_sel = RsvdKeywordSel { sv: false, vhdl: false, error: false};
+        let parser_cfg = ParserCfg::new(rsvd_sel, false);
+        match RifGenSrc::from_file(&self.file_path, &[], &parser_cfg) {
             Ok(src) => {
                 // TODO: parameters/suffixes could come from a json file ?
                 let params = ParamValues::new();
@@ -661,7 +663,7 @@ impl RifViewer {
 
         // TODO: estimate max length of name
         let width_name = reg.fields.iter().map(|f| f.name().len()).max().unwrap_or(0) as f32 * 7.9;
-        let width_reset = ((reg.fields.iter().map(|f| f.width).max().unwrap_or(0) >> 2) + 2) as f32 * 7.9;
+        let width_reset = ((reg.fields.iter().map(|f| f.width()).max().unwrap_or(0) >> 2) + 2) as f32 * 7.9;
         let table = TableBuilder::new(ui)
             .striped(true)
             .max_scroll_height(18.0*16.0+20.0) // Limit to 16 rows (include the header)
@@ -685,7 +687,7 @@ impl RifViewer {
                 }
                 for f in reg.fields.iter() {
                     body.row(18.0, |mut row| {
-                        let pos = if f.width==1 {format!("{}",f.lsb)} else {format!("{}:{}",f.msb(), f.lsb)};
+                        let pos = if f.width()==1 {format!("{}",f.lsb)} else {format!("{}:{}",f.msb(), f.lsb)};
                         row.col(|ui| {ui.label(pos);});
                         row.col(|ui| {
                             let n = f.name();
@@ -706,9 +708,10 @@ impl RifViewer {
 }
 
 fn get_field_rst_str(field: &RifFieldInst) -> String {
-    let val = field.reset.to_u128(field.width);
-    let w = (field.width >> 2) as usize;
-    if field.width > 12 {
+    let width = field.width() as u8;
+    let val = field.reset.to_u128(width);
+    let w = (width >> 2) as usize;
+    if width > 12 {
         format!("0x{val:0w$X}")
     } else {
         format!("{val}")

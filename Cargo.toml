@@ -16,5 +16,5 @@ eframe = "0.31"
 egui = "0.31"
 egui-file-dialog = "0.10"
 egui_extras = "0.31"
-yarig = "0.15"
+yarig = "0.23"
 # yarig = {path="../rifgen"}
