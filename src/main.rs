@@ -4,11 +4,11 @@ mod select;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-use std::{collections::HashMap, path::PathBuf, sync::Arc};
+use std::{collections::HashMap, path::{Path, PathBuf}};
 
 use eframe::egui;
 use egui_extras::{Column, TableBuilder};
-use egui_file_dialog::FileDialog;
+use egui_file_dialog::{FileDialog, Filter};
 use egui::{RichText, ViewportBuilder};
 use search::SearchMatches;
 use select::{SelectedItem, Selection};
@@ -61,7 +61,7 @@ struct RifViewer {
 impl Default for RifViewer {
     fn default() -> Self {
         let file_dialog = FileDialog::new()
-            .add_file_filter("RIFs", Arc::new(|p| p.extension().unwrap_or_default() == "rif"))
+            .add_file_filter("RIFs", Filter::new(|p: &Path| p.extension().unwrap_or_default() == "rif"))
             .default_file_filter("RIFs")
             .show_new_folder_button(false);
         Self {
@@ -111,15 +111,15 @@ impl CompInfo {
 
 
 impl eframe::App for RifViewer {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         // Re-open last file When hitting F5
-        if ctx.input(|i|  i.key_pressed(egui::Key::F5)) {
+        if ui.input(|i|  i.key_pressed(egui::Key::F5)) {
             self.open_file();
         }
         // Bottom Panel: open/search
-        self.show_bottom_panel(ctx);
+        self.show_bottom_panel(ui);
         // Tree view
-        egui::SidePanel::left("tree_view").min_width(220.0).resizable(true).show(ctx, |ui| {
+        egui::Panel::left("tree_view").min_size(220.0).resizable(true).show(ui, |ui| {
             egui::ScrollArea::vertical().auto_shrink(false).show(ui, |ui| {
                 if let Some(ref comp) = self.rif_comp {
                     Self::display_tree_comp(ui, comp, Vec::new(), &mut self.selected);
@@ -130,7 +130,7 @@ impl eframe::App for RifViewer {
             });
         });
         // Content
-        egui::CentralPanel::default().show(ctx, |ui| {
+        egui::CentralPanel::default().show(ui, |ui| {
             egui::ScrollArea::vertical().auto_shrink(false).show(ui, |ui| {
                 if let Some(e) = &self.last_err {
                     ui.heading("Compilation error !");
@@ -265,18 +265,18 @@ impl RifViewer {
         }
     }
 
-    fn show_bottom_panel(&mut self, ctx: &egui::Context) {
-        egui::TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
+    fn show_bottom_panel(&mut self, ui: &mut egui::Ui) {
+        egui::Panel::bottom("bottom_panel").show(ui, |ui| {
             ui.horizontal(|ui| {
                 // Load File button
-                if ui.button("Load File").clicked() || ctx.input(|i| i.modifiers.ctrl && i.key_pressed(egui::Key::O)) {
+                if ui.button("Load File").clicked() || ui.input(|i| i.modifiers.ctrl && i.key_pressed(egui::Key::O)) {
                     // let path = self.file_path.clone();
                     // self.file_dialog.show_left_panel(show_left_panel)
                     self.file_dialog.pick_file();
                 }
 
                 // Handle picked file
-                self.file_dialog.update(ctx);
+                self.file_dialog.update(ui.ctx());
                 if let Some(path) = self.file_dialog.take_picked() {
                     self.file_dialog.config_mut().initial_directory = path.clone();
                     self.file_path = path;
@@ -294,7 +294,7 @@ impl RifViewer {
                     ui.add(text_edit)
                 };
                 // Handle Ctrl+F to focus the search bar
-                if ctx.input(|i| i.modifiers.command && i.key_pressed(egui::Key::F)) {
+                if ui.input(|i| i.modifiers.command && i.key_pressed(egui::Key::F)) {
                     search_response.request_focus();
                     // Select all text in the search box
                     if let Some(mut state) = egui::TextEdit::load_state(ui.ctx(), search_response.id) {
@@ -341,13 +341,13 @@ impl RifViewer {
                     ui.label(format!("{}/{}", self.current_result + 1, self.search_results.len()));
 
                     if ui.button("⬆").clicked()
-                            || ctx.input(|i| i.key_pressed(egui::Key::F3) && i.modifiers.shift) {
+                            || ui.input(|i| i.key_pressed(egui::Key::F3) && i.modifiers.shift) {
                         self.current_result = self.current_result.wrapping_sub(1) % self.search_results.len();
                         self.search_updt_match();
                     }
 
                     if ui.button("⬇").clicked()
-                            || ctx.input(|i| i.key_pressed(egui::Key::F3)
+                            || ui.input(|i| i.key_pressed(egui::Key::F3)
                             || (!do_search && i.key_pressed(egui::Key::Enter))) {
                         self.current_result = (self.current_result + 1) % self.search_results.len();
                         self.search_updt_match();
