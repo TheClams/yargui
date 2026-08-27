@@ -820,7 +820,7 @@ dependencies = [
  "libc",
  "option-ext",
  "redox_users",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2892,7 +2892,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.12.1",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -4511,9 +4511,9 @@ dependencies = [
 
 [[package]]
 name = "yarig"
-version = "0.24.5"
+version = "0.25.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4d2b38fe0c481b757957c823d5f6fee3f45d58b23afdb4d6079e4972c5456d7f"
+checksum = "1655d3f76e94deaf3706058b28be4e28d8b710ab5d6ca3c8e7c173c26d0a8b96"
 dependencies = [
  "clap",
  "latex2mathml",

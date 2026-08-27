@@ -28,6 +28,13 @@ pub struct Selection {
     pub updt: usize,
 }
 
+/// A navigation the user attempted while a different RIF type still had edits pending
+#[derive(Clone, Debug)]
+pub struct PendingRifSwitch {
+    pub target: Selection,
+    pub from_rif: String,
+}
+
 impl Selection {
     /// Set current path and set the updated flag to ensure scrolling
     pub fn set_path(&mut self, path: Vec<String>) {
